@@ -8,24 +8,27 @@ from tkinter import scrolledtext, filedialog
 def null_decorator(ob):
     return ob
 
-if sys.version_info >= (3,2,0):
+
+if sys.version_info >= (3, 2, 0):
     import functools
+
     my_cache_decorator = functools.lru_cache(maxsize=4096)
 else:
     my_cache_decorator = null_decorator
 
+
 @my_cache_decorator
-def get_dir_size(start_path = '.'):
+def get_dir_size(start_path='.'):
     total_size = 0
     if 'scandir' in dir(os):
         # using fast 'os.scandir' method (new in version 3.5)
         for entry in os.scandir(start_path):
-            if entry.is_dir(follow_symlinks = False):
+            if entry.is_dir(follow_symlinks=False):
                 try:
                     total_size += get_dir_size(entry.path)
                 except:
                     pass
-            elif entry.is_file(follow_symlinks = False):
+            elif entry.is_file(follow_symlinks=False):
                 total_size += entry.stat().st_size
     else:
         # using slow, but compatible 'os.listdir' method
@@ -37,22 +40,15 @@ def get_dir_size(start_path = '.'):
                 total_size += os.path.getsize(full_path)
     return total_size
 
-def get_dir_size_walk(start_path = '.'):
-    total_size = 0
-    for dirpath, dirnames, filenames in os.walk(start_path):
-        for f in filenames:
-            fp = os.path.join(dirpath, f)
-            total_size += os.path.getsize(fp)
-    return total_size
 
 def bytes2human(n, format='%(value).0f%(symbol)s', symbols='customary'):
     SYMBOLS = {
-        'customary'     : ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'),
-        'customary_ext' : ('byte', 'kilo', 'mega', 'giga', 'tera', 'peta', 'exa',
-                           'zetta', 'iotta'),
-        'iec'           : ('Bi', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi', 'Yi'),
-        'iec_ext'       : ('byte', 'kibi', 'mebi', 'gibi', 'tebi', 'pebi', 'exbi',
-                           'zebi', 'yobi'),
+        'customary': ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'),
+        'customary_ext': ('byte', 'kilo', 'mega', 'giga', 'tera', 'peta', 'exa',
+                          'zetta', 'iotta'),
+        'iec': ('Bi', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi', 'Yi'),
+        'iec_ext': ('byte', 'kibi', 'mebi', 'gibi', 'tebi', 'pebi', 'exbi',
+                    'zebi', 'yobi'),
     }
     n = int(n)
     if n < 0:
@@ -60,7 +56,7 @@ def bytes2human(n, format='%(value).0f%(symbol)s', symbols='customary'):
     symbols = SYMBOLS[symbols]
     prefix = {}
     for i, s in enumerate(symbols[1:]):
-        prefix[s] = 1 << (i+1)*10
+        prefix[s] = 1 << (i + 1) * 10
     for symbol in reversed(symbols[1:]):
         if n >= prefix[symbol]:
             value = float(n) / prefix[symbol]
@@ -69,13 +65,10 @@ def bytes2human(n, format='%(value).0f%(symbol)s', symbols='customary'):
 
 
 if __name__ == '__main__':
-
-
     from tkinter import *
 
-
     def clicked():
-        folder = txt.get()
+        folder = txt.cget("text")
         start_dir = os.path.normpath(os.path.abspath(sys.argv[1])) if len(sys.argv) > 1 else folder
         dir_tree = {}
         get_size = get_dir_size
@@ -107,7 +100,8 @@ if __name__ == '__main__':
                     if not rp:
                         new_d = d.replace(i + '\\', '')
                         rp = True
-            lbl.insert(INSERT, '%s\t%s%s' % (bytes2human(size, format='%(value).2f%(symbol)s'), tire, new_d) + "\n", size)
+            lbl.insert(INSERT, '%s\t%s%s' % (bytes2human(size, format='%(value).2f%(symbol)s'), tire, new_d) + "\n",
+                       size)
             if size in (range(0, 1000)):
                 colors = "cyan3"
             elif size in (range(1001, 10000)):
@@ -150,8 +144,11 @@ if __name__ == '__main__':
                 i.destroy()
         fig2 = Figure()  # Создаем объект фигуры для диаграммы
         ax2 = fig2.add_subplot()  # Добавляем координатную плоскость
-        ax2.pie(diag_max_size, radius=1, labels=diag_max_name, autopct='%0.2f%%',
-               shadow=True)  # Создание круговой диаграммы
+        try:
+            ax2.pie(diag_max_size, radius=1, labels=diag_max_name, autopct='%0.2f%%')  # Создание круговой диаграммы
+        except Exception as error:
+            print("Возникла ошибка в строке 161: ")
+            print(error)
         chart2 = FigureCanvasTkAgg(fig2, window)  # Добавление круговой диаграммы на окно
         chart2.get_tk_widget().grid(column=1, row=1)  # Расположение круговой диаграммы
 
@@ -162,30 +159,29 @@ if __name__ == '__main__':
     from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
     from matplotlib.figure import Figure
 
-    stockListExp = ['AMZN', 'AAPL', 'JETS', 'CCL', 'NCLH']  # Указываем название областей диаграммы
-    stockSplitExp = [15, 25, 40, 10, 10]  # Указывает процентное соотношение в диаграмме
+    stockListExp = ['', '', '', '', '']  # Указываем название областей диаграммы
+    stockSplitExp = [20, 20, 20, 20, 20]  # Указывает процентное соотношение в диаграмме
 
     fig = Figure()  # Создаем объект фигуры для диаграммы
     ax = fig.add_subplot()  # Добавляем координатную плоскость
 
-    ax.pie(stockSplitExp, radius=1, labels=stockListExp, autopct='%0.2f%%', shadow=True)  # Создание круговой диаграммы
+    ax.pie(stockSplitExp, radius=1, labels=stockListExp, autopct='%0.2f%%')  # Создание круговой диаграммы
 
     chart1 = FigureCanvasTkAgg(fig, window)  # Добавление круговой диаграммы на окно
+
 
     def browse_button():
         filename = filedialog.askdirectory()
         txt.config(text=filename)
 
-    txt = Entry(window, width=50)  # Поле ввода пути к папке
+
+    txt = Label(window, width=50)  # Поле ввода пути к папке
     txt.grid(column=0, row=0)  # Расположение указателя пути
     lbl = scrolledtext.ScrolledText(window, width=60, height=30, font=("Consolas", 12, "bold"))  # Поле с файлами
     lbl.grid(column=0, row=1)  # Расположение списка файлов
     btn = Button(window, text="Вычислить!", command=clicked)  # Кнопка сканирования
-    button2 = Button(text="Выбрать папку", command=browse_button).grid(row=0, column=3) # Кнопка выбора пути к папке
+    button2 = Button(text="Выбрать папку", command=browse_button).grid(row=0, column=3)  # Кнопка выбора пути к папке
     btn.grid(column=2, row=0)  # Расположение кнопки сканирования
     chart1.get_tk_widget().grid(column=1, row=1)  # Расположение круговой диаграммы
 
     window.mainloop()
-
-
-
